@@ -92,15 +92,15 @@ int main(int argc, char* argv[]) {
    FILE *fp;
    fp=fopen("result.txt","w");
 
-   if (argc == 6) {
+   if (argc == 7) {
       seqLength = atoi(argv[1]);
       numLayers = atoi(argv[2]);
       hiddenSize = atoi(argv[3]);
       inputSize = hiddenSize;
       miniBatch = atoi(argv[4]);
-      dropout = 0;
       bidirectional = 0;
       mode = atoi(argv[5]);
+      dropout = atof(argv[6]);
    }
    else {
       printf("Usage:\n");
@@ -249,6 +249,7 @@ int main(int argc, char* argv[]) {
                              states, 
                              stateSize, 
                              seed));
+   printf("dropout = %g, stateSize = %ld\n", dropout, stateSize);
                              
    // -------------------------   
    // Set up the RNN descriptor
@@ -458,7 +459,13 @@ int main(int argc, char* argv[]) {
                                          workSize,
                                          reserveSpace, 
                                          reserveSize));
-                
+
+   float buffer[102400];
+   cudaMemcpy(buffer, y, hiddenSize * seqLength * miniBatch * 1 * sizeof(float), cudaMemcpyDeviceToHost);
+   for (int i = 0; i < hiddenSize * seqLength * miniBatch * 1; ++i) {
+       printf("%d : %g\n", i, buffer[i]);
+   }
+
    cudaErrCheck(cudaEventRecord(stop));   
    cudaErrCheck(cudaEventSynchronize(stop));
    cudaErrCheck(cudaEventElapsedTime(&timeForward, start, stop));
